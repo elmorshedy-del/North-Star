@@ -23,7 +23,7 @@ import type { Instant } from '../../domain/time.contract.ts';
 import type { Degrees, Hours, Milliseconds } from '../../domain/units.contract.ts';
 import { domainError, err, ok } from '../../domain/result.ts';
 import { instant } from '../../domain/time.ts';
-import { degrees, hours, milliseconds } from '../../domain/units.ts';
+import { degrees, hours, milliseconds, normalise360 } from '../../domain/units.ts';
 import './stars.ts';
 
 const BODIES: Record<CelestialBody, Body> = {
@@ -70,8 +70,12 @@ function missingEvent(
   context: SkyContext,
   threshold: Degrees,
 ): Result<Instant, DomainError> {
-  const current = horizontalOfBody(body, context);
-  if (current.altitude > threshold) {
+  // Classify from upper transit, not the call instant: a polar-night noon
+  // is still never-rises, even though a midnight sample of the same day
+  // would have been obviously below the threshold.
+  const transit = SearchHourAngle(BODIES[body], observerOf(context), 0, dateOf(context), 1);
+  const peak = horizontalOfBody(body, { ...context, instant: instantOf(transit.time) });
+  if (peak.altitude > threshold) {
     return err(domainError('body-always-up', `${body} stays above ${String(threshold)}° here`));
   }
   return err(domainError('body-never-rises', `${body} stays below ${String(threshold)}° here`));
@@ -85,7 +89,7 @@ function horizontalOfBody(body: CelestialBody, context: SkyContext): Horizontal 
   const horizon = Horizon(date, observer, equator.ra, equator.dec, 'normal');
   return {
     altitude: degrees(horizon.altitude),
-    azimuth: degrees(horizon.azimuth),
+    azimuth: normalise360(degrees(horizon.azimuth)),
     refracted: true,
   };
 }

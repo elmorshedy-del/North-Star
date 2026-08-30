@@ -26,9 +26,11 @@ return the August sunrise from a June Arctic context, which fails the required
 `body-always-up` outcome.
 
 **Now:** search 2 days (enough to straddle midnight, not enough to jump a polar
-season). If the search returns null, classify by current altitude against the
-threshold (−0.833° for rise/set, the requested altitude for a crossing):
-above → `body-always-up`, below → `body-never-rises`.
+season). If the search returns null, classify by altitude at **upper transit**
+against the threshold (−0.833° for rise/set, the requested altitude for a
+crossing): above → `body-always-up`, below → `body-never-rises`. Using the
+call instant would make a polar-night noon look like `body-always-up` on any
+day whose midnight sample is obviously below the threshold.
 
 **Look at:** `astronomy-engine-ephemeris.ts` — `SEARCH_DAYS`, `missingEvent`
 
@@ -61,8 +63,10 @@ refraction. There is no port flag to request an airless reduction.
 | Invariant tolerances | `docs/05-testing.md` Defence 2, `docs/03-astronomy.md` | as written |
 
 NOAA's Greenwich solar noon is **11:43:31**. The packet probe says 11:43:33 ± 2 s.
-Those agree. I gold against NOAA (11:43:31 ± 2 s) and will report the probe
-against 11:43:33 ± 2 s.
+The golden test uses 11:43:33 ± 2 s (the probe number). NOAA sits 2 s earlier,
+inside that window. "London" here is Greenwich 51.4779 N 0.0015 W — the
+coordinates in `docs/05-testing.md` and the source of the 11:43:33 figure.
+City-of-London (−0.13°) is ~30 s later and would miss the ±2 s gate.
 
 ---
 
@@ -82,6 +86,21 @@ fourth decimal.
 
 **Please confirm:** 0.71° in the probe is two-decimal rounding, and 0.7144° is
 not a defect.
+
+---
+
+## 7. Re-audit — what the first pass did not prove
+
+The first suite could stay green with two real defects:
+
+- Invariant 2 only called `Equator`. A `false` ofdate inside `horizontalOf`
+  would still pass. It now also requires `horizontalOf('polaris')` to match
+  the of-date `Horizon` and to miss the J2000 `Horizon` by > 0.05°.
+- Invariant 5 called `refractionAt` with the *apparent* noon altitude. The
+  port takes a true altitude. Predicted is now
+  `geometric + refractionAt(geometric)`.
+- Azimuth is wrapped with `normalise360` so `Horizontal.azimuth` stays in
+  `[0, 360)` as the contract states, including at the poles.
 
 ---
 

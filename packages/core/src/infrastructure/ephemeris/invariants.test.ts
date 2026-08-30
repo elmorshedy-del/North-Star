@@ -61,16 +61,27 @@ describe('Polaris apparent altitude tracks observer latitude', () => {
 });
 
 describe('Polaris offset from the true pole, of-date, 2026', () => {
-  it('is 0.62° ± 0.02°, not the J2000 0.736°', () => {
+  it('is 0.62° ± 0.02°, and the adapter is not on the J2000 path', () => {
     // docs/05-testing.md Defence 2 #2; docs/03-astronomy.md §3.
-    // J2000 coordinates would give 0.736° — that is the epoch-bug tripwire.
+    // Equator alone cannot catch a false ofdate in horizontalOf. J2000 is 0.736°.
     const observer = new Observer(51.48, 0, 0);
     const samples = ['2026-01-15T00:00:00.000Z', '2026-06-21T00:00:00.000Z', '2026-11-03T00:00:00.000Z'];
     for (const iso of samples) {
-      const eq = Equator(Body.Star1, new Date(iso), observer, true, true);
-      expect(90 - eq.dec).toBeCloseTo(0.62, 1);
-      expect(Math.abs(90 - eq.dec - 0.62)).toBeLessThanOrEqual(0.02);
+      const ofdate = Equator(Body.Star1, new Date(iso), observer, true, true);
+      expect(Math.abs(90 - ofdate.dec - 0.62)).toBeLessThanOrEqual(0.02);
     }
+
+    const iso = '2026-06-21T00:00:00.000Z';
+    const date = new Date(iso);
+    const ofdate = Equator(Body.Star1, date, observer, true, true);
+    const j2000 = Equator(Body.Star1, date, observer, false, true);
+    expect(Math.abs(90 - j2000.dec - 0.736)).toBeLessThan(0.01);
+
+    const ours = eph.horizontalOf('polaris', at(51.48, 0, iso));
+    const ofdateHorizon = Horizon(date, observer, ofdate.ra, ofdate.dec, 'normal');
+    const j2000Horizon = Horizon(date, observer, j2000.ra, j2000.dec, 'normal');
+    expect(Math.abs(ours.altitude - ofdateHorizon.altitude)).toBeLessThan(1 / 60);
+    expect(Math.abs(ours.altitude - j2000Horizon.altitude)).toBeGreaterThan(0.05);
   });
 });
 
@@ -116,8 +127,9 @@ describe('noon altitude is 90 − |latitude − declination|', () => {
       const equator = Equator(Body.Sun, new Date(noon.instant), new Observer(lat, 0, 0), true, true);
       const geometric = 90 - Math.abs(lat - equator.dec);
       const apparent = eph.horizontalOf('sun', noon).altitude;
-      const trueAltitude = apparent - eph.refractionAt(degrees(apparent));
-      expect(Math.abs(trueAltitude - geometric)).toBeLessThan(0.02);
+      // refractionAt takes a TRUE altitude — do not pass the apparent one back in.
+      const predicted = geometric + eph.refractionAt(degrees(geometric));
+      expect(Math.abs(apparent - predicted)).toBeLessThan(0.02);
       if (lat === 0) {
         expect(geometric).toBeCloseTo(66.57, 1);
       }

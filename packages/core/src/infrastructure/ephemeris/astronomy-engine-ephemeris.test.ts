@@ -68,20 +68,24 @@ describe('golden values against external almanacs', () => {
 });
 
 describe('rise and set as modelled outcomes', () => {
-  it('reports body-always-up for the Arctic sun in June', () => {
-    const ctx = at(78, 0, '2026-06-21T00:00:00.000Z');
-    const rise = eph.riseSet('sun', ctx, 'next-rise');
-    const set = eph.riseSet('sun', ctx, 'next-set');
-    expect(isErr(rise) && rise.error.code).toBe('body-always-up');
-    expect(isErr(set) && set.error.code).toBe('body-always-up');
+  it('reports body-always-up for the Arctic sun in June, at midnight and at noon', () => {
+    for (const iso of ['2026-06-21T00:00:00.000Z', '2026-06-21T12:00:00.000Z']) {
+      const ctx = at(78, 0, iso);
+      const rise = eph.riseSet('sun', ctx, 'next-rise');
+      const set = eph.riseSet('sun', ctx, 'next-set');
+      expect(isErr(rise) && rise.error.code).toBe('body-always-up');
+      expect(isErr(set) && set.error.code).toBe('body-always-up');
+    }
   });
 
-  it('reports body-never-rises for the Arctic sun in December', () => {
-    const ctx = at(78, 0, '2026-12-21T00:00:00.000Z');
-    const rise = eph.riseSet('sun', ctx, 'next-rise');
-    const set = eph.riseSet('sun', ctx, 'next-set');
-    expect(isErr(rise) && rise.error.code).toBe('body-never-rises');
-    expect(isErr(set) && set.error.code).toBe('body-never-rises');
+  it('reports body-never-rises for the Arctic sun in December, at midnight and at noon', () => {
+    for (const iso of ['2026-12-21T00:00:00.000Z', '2026-12-21T12:00:00.000Z']) {
+      const ctx = at(78, 0, iso);
+      const rise = eph.riseSet('sun', ctx, 'next-rise');
+      const set = eph.riseSet('sun', ctx, 'next-set');
+      expect(isErr(rise) && rise.error.code).toBe('body-never-rises');
+      expect(isErr(set) && set.error.code).toBe('body-never-rises');
+    }
   });
 
   it('reports body-always-up for nautical dawn when the Arctic sun never sets', () => {
