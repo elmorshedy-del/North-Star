@@ -73,15 +73,26 @@ describe('Polaris offset from the true pole, of-date, 2026', () => {
 
     const iso = '2026-06-21T00:00:00.000Z';
     const date = new Date(iso);
-    const ofdate = Equator(Body.Star1, date, observer, true, true);
     const j2000 = Equator(Body.Star1, date, observer, false, true);
     expect(Math.abs(90 - j2000.dec - 0.736)).toBeLessThan(0.01);
 
-    const ours = eph.horizontalOf('polaris', at(51.48, 0, iso));
-    const ofdateHorizon = Horizon(date, observer, ofdate.ra, ofdate.dec, 'normal');
-    const j2000Horizon = Horizon(date, observer, j2000.ra, j2000.dec, 'normal');
-    expect(Math.abs(ours.altitude - ofdateHorizon.altitude)).toBeLessThan(1 / 60);
-    expect(Math.abs(ours.altitude - j2000Horizon.altitude)).toBeGreaterThan(0.05);
+    // At some hour angles the epoch error is almost all azimuth. Sweep a day
+    // so a false ofdate cannot hide in a single lucky sample.
+    let farthestOfdate = 0;
+    let farthestJ2000 = 0;
+    for (let hour = 0; hour < 24; hour += 1) {
+      const hourIso = new Date(Date.UTC(2026, 5, 21, hour)).toISOString();
+      const hourDate = new Date(hourIso);
+      const ours = eph.horizontalOf('polaris', at(51.48, 0, hourIso));
+      const ofdateEq = Equator(Body.Star1, hourDate, observer, true, true);
+      const j2000Eq = Equator(Body.Star1, hourDate, observer, false, true);
+      const ofdateHorizon = Horizon(hourDate, observer, ofdateEq.ra, ofdateEq.dec, 'normal');
+      const j2000Horizon = Horizon(hourDate, observer, j2000Eq.ra, j2000Eq.dec, 'normal');
+      farthestOfdate = Math.max(farthestOfdate, Math.abs(ours.altitude - ofdateHorizon.altitude));
+      farthestJ2000 = Math.max(farthestJ2000, Math.abs(ours.altitude - j2000Horizon.altitude));
+    }
+    expect(farthestOfdate).toBeLessThan(1 / 60);
+    expect(farthestJ2000).toBeGreaterThan(0.05);
   });
 });
 
