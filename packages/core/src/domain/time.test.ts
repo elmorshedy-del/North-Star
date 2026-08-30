@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { milliseconds } from './units.ts';
+import { milliseconds } from './units';
 import {
   addDuration,
   durationBetween,
@@ -8,7 +8,7 @@ import {
   timeZone,
   toCivilTime,
   toIso,
-} from './time.ts';
+} from './time';
 
 describe('Instant', () => {
   it('round-trips ISO 8601 UTC timestamps', () => {
@@ -36,7 +36,7 @@ describe('durationBetween', () => {
 
     expect(durationBetween(later, earlier)).toBe(1000);
     expect(durationBetween(earlier, later)).toBe(-1000);
-    expect(durationBetween(later, earlier)).toBe(-durationBetween(earlier, later));
+    expect(durationBetween(later, earlier) + durationBetween(earlier, later)).toBe(0);
     expect(durationBetween(earlier, earlier)).toBe(0);
     expect(addDuration(earlier, hour)).toBe(instantFromIso('2026-01-01T01:00:00.000Z'));
     expect(addDuration(later, milliseconds(-1000))).toBe(earlier);

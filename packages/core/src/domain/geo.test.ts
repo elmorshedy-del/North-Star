@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { isErr, isOk } from './result.ts';
-import { degrees } from './units.ts';
-import { geoPosition, hemisphereOf, horizonDip } from './geo.ts';
+import { isErr, isOk } from './result';
+import { degrees } from './units';
+import { geoPosition, hemisphereOf, horizonDip } from './geo';
 
 describe('geoPosition', () => {
   it('rejects latitude outside [-90, 90] and accepts the poles', () => {

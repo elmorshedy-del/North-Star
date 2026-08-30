@@ -1,8 +1,8 @@
 import type { DomainError, Result } from './result.contract.ts';
 import type { GeoApi, GeoPosition, Hemisphere } from './geo.contract.ts';
 import type { Degrees } from './units.contract.ts';
-import { domainError, err, ok } from './result.ts';
-import { arcminutes, normaliseSigned180 } from './units.ts';
+import { domainError, err, ok } from './result';
+import { arcminutes, normaliseSigned180 } from './units';
 
 export function geoPosition(
   latitude: Degrees,

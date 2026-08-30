@@ -1,6 +1,6 @@
 import type { CivilTime, Instant, TimeApi, TimeZoneId } from './time.contract.ts';
 import type { Milliseconds } from './units.contract.ts';
-import { milliseconds } from './units.ts';
+import { milliseconds } from './units';
 
 function assertFinite(value: number, label: string): void {
   if (!Number.isFinite(value)) {

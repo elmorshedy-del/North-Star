@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { isOk } from './result.ts';
-import { geoPosition } from './geo.ts';
-import { countsTowardProgress, atInstant, skyContext } from './sky-context.ts';
-import { instantFromIso, timeZone } from './time.ts';
-import { degrees } from './units.ts';
+import { isOk } from './result';
+import { geoPosition } from './geo';
+import { countsTowardProgress, atInstant, skyContext } from './sky-context';
+import { instantFromIso, timeZone } from './time';
+import { degrees } from './units';
 
 function greenwich() {
   const result = geoPosition(degrees(51.4779), degrees(-0.0015), 47);
