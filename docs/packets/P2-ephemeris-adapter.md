@@ -102,6 +102,12 @@ never throw, and never return a fabricated time.
 **not 34′.** The 34′ figure is refraction at *apparent* altitude 0, which is a
 different question and has produced a great many wrong tests.
 
+### `localSiderealTime` must return [0, 24)
+
+`Hours` is deliberately unconstrained in the domain, because an hour angle is
+legitimately signed. Sidereal time is not: wrap it into [0, 24) here, and test the
+wrap. Nothing downstream will do it for you.
+
 ### `moonIllumination`
 `Illumination(Body.Moon, date)` gives `phase_fraction` and `phase_angle`. It does
 **not** give the bright-limb position angle, and the port deliberately does not ask

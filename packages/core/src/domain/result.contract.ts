@@ -30,7 +30,9 @@ export interface DomainError {
 
 /**
  * Contract for `result.ts`. The implementation must end with:
- *   const _contract: ResultApi = { ok, err, isOk, isErr, mapResult, unwrapOr };
+ *   const _contract: ResultApi = {
+ *     ok, err, isOk, isErr, mapResult, unwrapOr, domainError,
+ *   };
  */
 export interface ResultApi {
   ok<T>(value: T): Result<T, never>;

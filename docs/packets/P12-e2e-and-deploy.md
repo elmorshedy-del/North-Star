@@ -61,8 +61,11 @@ install browsers with the standard action step or set `executablePath` explicitl
 - **HTTPS is a requirement, not a nicety.** Geolocation and motion sensors are
   unavailable in a non-secure context, so a Pages URL is what makes the prototype
   testable on a real phone at all.
-- Confirm the Vite `base` matches the Pages path (P8 recorded which value it used).
-  A mismatch ships a blank page with 404s on every asset — the classic Pages failure.
+- The Vite `base` comes from `pagesBasePath` in `@cnav/brand` and must match the
+  repository name exactly, including its capitals. A mismatch ships a blank page
+  with 404s on every asset — the classic Pages failure, and it reports no error.
+  If the repository is ever renamed, `repositoryName` in that file is the only
+  thing to change.
 
 ## Acceptance
 

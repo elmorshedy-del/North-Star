@@ -11,6 +11,9 @@ Everything under `apps/web/src/screens/` and `apps/web/src/components/`.
 
 Anything in `packages/core/src`. Any `*.contract.ts` or `*.port.ts`.
 
+**Do not type the product's name anywhere.** Import `PRODUCT` from `@cnav/brand`.
+A rename must stay a one-line change.
+
 **Do not write teaching copy in components.** All instructional content comes from
 `skill.teach` (a `TeachingScript`). If you find yourself typing a sentence of
 teaching prose into JSX, stop — it belongs in the skill definition, where it can be

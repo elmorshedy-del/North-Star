@@ -99,6 +99,13 @@ who cannot save progress should still be able to use the app tonight.
   read**: stored data is untrusted input, it may come from an older build, and a
   malformed profile must degrade to an empty one rather than crash the app.
 
+  **Build the key with `storageKey()` from `@cnav/brand`** — never from the product
+  name. That helper is deliberately backed by a fixed namespace that does not follow
+  the brand: if storage keys tracked the name, renaming the product would silently
+  orphan every user's saved calibration and progress. They would open the app to
+  find their work gone and no explanation for it. Storage keys are a data migration,
+  not a label.
+
 ## Acceptance tests
 
 Test with fakes and stubs; no real device needed.

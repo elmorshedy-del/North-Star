@@ -19,7 +19,14 @@
 
 export type Degrees = number & { readonly __unit: 'degrees' };
 export type Radians = number & { readonly __unit: 'radians' };
-/** Sidereal or right-ascension hours, range [0, 24). */
+/**
+ * Hours of arc: right ascension, sidereal time, or an hour angle.
+ *
+ * NOT constrained to [0, 24). An hour angle is legitimately signed (roughly
+ * -12..+12), so normalising inside `degreesToHours` would corrupt it. Callers
+ * that need a wrapped value — sidereal time is the one that does — normalise at
+ * the point of use and say so in their own contract.
+ */
 export type Hours = number & { readonly __unit: 'hours' };
 /** A duration, not a point in time. See `time.contract.ts` for instants. */
 export type Milliseconds = number & { readonly __unit: 'milliseconds' };

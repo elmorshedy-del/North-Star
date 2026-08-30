@@ -107,6 +107,14 @@ export default tseslint.config(
                 'astronomy-engine may only be imported inside ' +
                 'packages/core/src/infrastructure/ephemeris/. Depend on EphemerisPort instead.',
             },
+            {
+              // The core is astronomy and teaching. It must not know what the
+              // product is called, or a rename stops being a one-line change.
+              name: '@cnav/brand',
+              message:
+                'packages/core must not know the product name. Brand is presentation: ' +
+                'import @cnav/brand from an app, and pass any needed string inward.',
+            },
           ],
         },
       ],
