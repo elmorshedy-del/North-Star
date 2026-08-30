@@ -1,5 +1,4 @@
 /**
- * Adapters live here. Populated by packet P2 (`ephemeris/`).
- * This is the ONLY layer permitted to import `astronomy-engine`.
+ * Adapters. This is the ONLY layer permitted to import `astronomy-engine`.
  */
-export {};
+export { AstronomyEngineEphemeris } from './ephemeris/astronomy-engine-ephemeris.ts';
