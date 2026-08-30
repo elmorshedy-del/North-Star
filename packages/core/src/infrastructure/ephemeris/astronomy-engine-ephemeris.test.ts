@@ -37,6 +37,7 @@ describe('golden values against external almanacs', () => {
     // NOAA Solar Calculator, 51.4779 N 0.0015 W, 2026-11-03 (UTC / GMT):
     // sunrise 06:57, sunset 16:29, solar noon 11:43:31.
     // https://gml.noaa.gov/grad/solcalc/table.php?name=Greenwich&lat=51.4779&lon=-0.0015&year=2026&tz=0
+    // Packet probe (and docs/03-astronomy.md §6) states 11:43:33 ± 2 s; NOAA is 2 s earlier.
     const ctx = at(51.4779, -0.0015, '2026-11-03T00:00:00.000Z');
     const rise = eph.riseSet('sun', ctx, 'next-rise');
     const set = eph.riseSet('sun', ctx, 'next-set');
@@ -47,8 +48,9 @@ describe('golden values against external almanacs', () => {
     }
 
     const noon = eph.culmination('sun', ctx);
-    const noaaNoon = instantFromIso('2026-11-03T11:43:31.000Z');
-    expect(Math.abs(noon - noaaNoon)).toBeLessThan(2_000);
+    // NOAA table: 11:43:31. Packet probe: 11:43:33 ± 2 s. They agree.
+    const expected = instantFromIso('2026-11-03T11:43:33.000Z');
+    expect(Math.abs(noon - expected)).toBeLessThan(2_000);
   });
 
   it('matches timeanddate nautical twilight in London on 2026-11-03', () => {

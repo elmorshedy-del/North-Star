@@ -204,7 +204,9 @@ describe('sidereal time advance', () => {
       atInstant(ctx, addDuration(ctx.instant, milliseconds(86_400_000))),
     );
     const deltaHours = (next - first + 24) % 24;
-    expect(Math.abs(deltaHours * 15 - 360.9856)).toBeLessThan(0.001);
+    // LST is wrapped to [0, 24); the Earth turned 360° plus this excess.
+    const advanceDegrees = 360 + deltaHours * 15;
+    expect(Math.abs(advanceDegrees - 360.9856)).toBeLessThan(0.001);
   });
 });
 
