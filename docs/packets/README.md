@@ -17,6 +17,15 @@ repository to understand what to build, that is a defect in the packet — say s
 5. Never add an `eslint-disable`.
 6. Finish with `npm run verify` and paste the output.
 
+## Start from the latest `main`
+
+`git fetch origin && git checkout -b packet/PN-name origin/main`.
+
+A branch cut from a stale `main` can pass every check on its own and still be wrong
+about what lands, because the checks it ran are not the checks the merged result
+runs. Before asking for review, merge `main` in and re-run `npm run verify` on the
+result.
+
 ## Escalate rather than guess
 
 Stop and ask if a contract lacks what you need, a test looks wrong, a lint rule
