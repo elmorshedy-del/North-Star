@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { isErr, isOk } from './result';
-import { degrees } from './units';
-import { geoPosition, hemisphereOf, horizonDip } from './geo';
+import { isErr, isOk } from './result.ts';
+import { degrees } from './units.ts';
+import { geoPosition, hemisphereOf, horizonDip } from './geo.ts';
 
 describe('geoPosition', () => {
   it('rejects latitude outside [-90, 90] and accepts the poles', () => {
@@ -28,6 +28,13 @@ describe('geoPosition', () => {
       const result = geoPosition(degrees(0), degrees(input), 0);
       expect(isOk(result) && result.value.longitude).toBe(expected);
     }
+  });
+
+  it('rejects a non-finite elevation', () => {
+    const nan = geoPosition(degrees(51), degrees(0), Number.NaN);
+    const inf = geoPosition(degrees(51), degrees(0), Number.POSITIVE_INFINITY);
+    expect(isErr(nan) && nan.error.code).toBe('out-of-range');
+    expect(isErr(inf) && inf.error.code).toBe('out-of-range');
   });
 });
 

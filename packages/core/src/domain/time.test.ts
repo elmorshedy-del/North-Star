@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { milliseconds } from './units';
+import { milliseconds } from './units.ts';
 import {
   addDuration,
   durationBetween,
@@ -8,7 +8,7 @@ import {
   timeZone,
   toCivilTime,
   toIso,
-} from './time';
+} from './time.ts';
 
 describe('Instant', () => {
   it('round-trips ISO 8601 UTC timestamps', () => {
@@ -24,7 +24,19 @@ describe('Instant', () => {
 
   it('throws on a non-finite epoch and an unparseable ISO string', () => {
     expect(() => instant(Number.NaN)).toThrow(/finite/);
-    expect(() => instantFromIso('not-a-timestamp')).toThrow(/ISO 8601/);
+    expect(() => instantFromIso('not-a-timestamp')).toThrow(/Z or ±hh:mm/);
+  });
+
+  it('rejects a datetime with no offset, which Date.parse would read as local time', () => {
+    expect(() => instantFromIso('2026-06-21T12:00:00')).toThrow(/Z or ±hh:mm/);
+    expect(() => instantFromIso('2026-06-21')).toThrow(/Z or ±hh:mm/);
+  });
+
+  it('accepts a non-Z numeric offset', () => {
+    // India Standard Time is UTC+5:30 year-round (timeanddate.com / IANA Asia/Kolkata).
+    // https://www.timeanddate.com/time/zones/ist
+    // 12:00 +05:30 = 06:30 UTC.
+    expect(toIso(instantFromIso('2026-06-21T12:00:00+05:30'))).toBe('2026-06-21T06:30:00.000Z');
   });
 });
 
@@ -82,5 +94,9 @@ describe('toCivilTime', () => {
     const noon = toCivilTime(instantFromIso('2026-07-15T12:00:00.000Z'), utc);
     expect(noon.hour).toBe(12);
     expect(noon.isDaylightSaving).toBe(false);
+  });
+
+  it('rejects an unknown IANA id at construction', () => {
+    expect(() => timeZone('Not/AZone')).toThrow();
   });
 });

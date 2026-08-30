@@ -2,126 +2,70 @@
 
 **PR:** https://github.com/elmorshedy-del/North-Star/pull/1
 **Packet:** `docs/packets/P1-domain-primitives.md`
-**Please treat this file as the review checklist for everything I guessed.**
-The packet and contracts did not specify these behaviours. Later packets will
-inherit them. Accept, reject, or rewrite each numbered item; do not let a silent
-assumption survive the gate.
 
-Verify (`npm run verify` and `npm run test:coverage`) is green. That is not the
-question here. The question is whether these choices are the ones you wanted.
+Audit review `5062078502` asked for two blocking fixes, one constructor change,
+import-style unification after merging `main`, and two non-blocking nits. Status
+below. Please re-audit this branch (now merged with `main`) rather than the
+pre-merge green.
 
 ---
 
-## 1. No-DST zones report `isDaylightSaving: false`
+## Required — fixed
 
-**Look at:** `packages/core/src/domain/time.ts` — `isDaylightSavingAt`
+### 1. `instantFromIso` rejects a missing offset
 
-The packet says: compare this instant's offset to the January and July offsets;
-the larger of those two is the DST offset in either hemisphere.
+`Date.parse` treats `2026-06-21T12:00:00` as the host zone. That is the ambient
+leak this constructor exists to prevent, and voyage mode would replay a different
+sky on different machines.
 
-It does not say what to do when January and July are equal (UTC, `Africa/Nairobi`,
-most of Queensland). I treat equal offsets as "this zone has no DST this year"
-and return `false`. Otherwise `current === Math.max(jan, jul)` would be true
-year-round and UTC would claim it was on daylight saving.
-
-Southern-hemisphere detection still follows the packet: Sydney in January is DST,
-Sydney in July is not. Tested in `time.test.ts`.
-
-**Please confirm:** equal January/July offsets ⇒ not DST.
-
----
-
-## 2. `instantFromIso` throws on an unparseable string
+**Now:** throw unless the string ends in `Z` or `±hh:mm`. Naive datetimes and
+date-only forms are rejected. `+05:30` is accepted (IST, UTC+5:30).
 
 **Look at:** `packages/core/src/domain/time.ts` — `instantFromIso`
-**Contract:** `TimeApi.instantFromIso(iso: string): Instant`
+**Tests:** `time.test.ts` — naive reject; `+05:30` → `06:30Z`
 
-The return type is `Instant`, not `Result`. `invalid-format` exists on
-`DomainErrorCode` but this function cannot return it without changing the
-contract, which I must not do.
+### 2. `geoPosition` rejects a non-finite elevation
 
-I throw. That matches the unit constructors: bad input here is a programmer
-error (a bad literal or a bad log line at the adapter boundary), not a user
-action.
+`NaN` / `Infinity` used to pass the constructor and throw later inside
+`horizonDip`, with a stack that said nothing about elevation. P9 will map
+`position.coords.altitude`, and `Number(undefined)` is `NaN`.
 
-`Date.parse` accepts naive datetimes (`2026-03-29T12:00:00` with no `Z` or
-offset). In ES that is local time — an ambient-zone read. Tests only pass `Z`
-suffixes. I did not reject missing offsets, because the packet did not ask for
-a parser policy.
+**Now:** `out-of-range` at the constructor, alongside the latitude check.
 
-**Please confirm:** throw, not `Result`. And whether naive ISO should be rejected
-so `toCivilTime`'s "never read the ambient zone" rule cannot leak in through
-construction.
+**Look at:** `packages/core/src/domain/geo.ts` — `geoPosition`
+**Tests:** `geo.test.ts` — `NaN` and `Infinity`
 
 ---
 
-## 3. `instant` throws on non-finite epoch milliseconds
+## Rulings — applied
 
-**Look at:** `packages/core/src/domain/time.ts` — `instant`
-**Contract:** `TimeApi.instant(epochMilliseconds: number): Instant`
-
-The packet names `instantFromIso` / `toIso` / `addDuration` / `durationBetween`
-but the contract also requires `instant`. Non-finite input is not mentioned.
-
-I throw, same rule as `degrees` / `radians` / `hours` / `milliseconds`. `NaN` as
-an instant would otherwise travel silently into every skill.
-
-**Please confirm:** non-finite epoch ms is programmer error.
-
----
-
-## 4. `horizonDip` clamps elevation below sea level to zero
-
-**Look at:** `packages/core/src/domain/geo.ts` — `horizonDip`
-
-The packet: dip ≈ `1.76 × √(elevation in metres)`, returns degrees, zero at sea
-level, never negative. It does not say what to do with Death Valley (−86 m) or a
-bad reading.
-
-`√` of a negative is `NaN`, and `degrees(NaN)` throws. That would turn a real
-position into a crash. I clamp `elevationMetres` to `≥ 0` before the square
-root, so dip is `0` below sea level. `geoPosition` still stores the raw
-elevation; only the dip is clamped.
-
-**Please confirm:** below-sea-level dip is `0`, not a throw and not
-`out-of-range`.
+1. **Equal Jan/Jul offsets ⇒ not DST — accepted.** Unchanged.
+2. **Throw rather than `Result` — accepted.** Unchanged, except naive ISO is now
+   rejected (Required 1).
+3. **Non-finite epoch throws — accepted.** Unchanged.
+4. **Below-sea-level dip clamps to 0 — accepted.** Unchanged.
+5. **`timeZone` late failure — accepted with a change.** `timeZone` now probes
+   `Intl.DateTimeFormat` (via the per-zone formatter cache) and throws at
+   construction. Invalid id test: `Not/AZone`.
+6. **Import-style split — fixed on `main`.** Merged `main`. Value imports now
+   use the `.ts` suffix, same as type-only imports.
 
 ---
 
-## 5. `timeZone` is a brand only — no IANA check
+## Non-blocking — done
 
-**Look at:** `packages/core/src/domain/time.ts` — `timeZone`
-**Contract:** `TimeApi.timeZone(id: string): TimeZoneId`
-
-I brand the string and return it. An invented id fails later, when
-`Intl.DateTimeFormat` runs inside `toCivilTime` (a `RangeError`). Validating
-up front would need a tz-database dependency or a probe `Intl` call in a
-constructor the packet did not describe as fallible.
-
-**Please confirm:** late failure in `toCivilTime` is acceptable.
+7. **`toCivilTime` formatter cost.** One `Intl.DateTimeFormat` per zone, held in
+   a module-level `Map`. Wall-clock parts and the January/July DST probes reuse
+   it. `timeZone` validation populates the same cache.
+8. **Stale `vitest.config.ts` comment.** Now states the rule: a workspace with
+   no tests is a defect, not a pass.
+9. **`degreesToHours` range.** No change, as instructed.
 
 ---
 
-## 6. Runtime imports omit the `.ts` suffix
+## Golden-value sources (unchanged)
 
-**Look at:** `packages/core/src/domain/index.ts` and the implementation files
-
-Contracts use `import type { … } from './units.contract.ts'`. That is type-only,
-so `tsc` accepts the suffix. Value imports (`from './units.ts'`) fail with
-TS5097 because `allowImportingTsExtensions` is off, and this packet must not
-edit `tsconfig`.
-
-So: type-only imports keep `.ts`; value imports are extensionless. I did not
-add a tsconfig flag.
-
-**Please confirm:** this split is the intended module style.
-
----
-
-## Also recorded, not a behaviour guess
-
-- London DST 2026 golden values: [timeanddate.com/time/change/uk/london](https://www.timeanddate.com/time/change/uk/london) — 29 Mar 01:00 GMT → 02:00 BST.
-- Sydney DST 2026: [timeanddate.com/time/change/australia/sydney](https://www.timeanddate.com/time/change/australia/sydney) — AEDT (UTC+11) in January, AEST (UTC+10) in July.
-- Horizon dip 100 m → 17.6′: Nautical Almanac / Bowditch `1.76 × √h`, restated in `docs/03-astronomy.md` §5.
-- `time.ts` lines 86 and 94 (missing/non-integer `Intl` parts) are untested platform-failure throws. Coverage still clears the thresholds (97.5% statements, 91.66% branches).
-- `ResultApi`'s header comment omits `domainError` from the `_contract` example; the interface includes it. The assertion includes `domainError`.
+- London DST 2026: [timeanddate.com, London clock changes](https://www.timeanddate.com/time/change/uk/london) — 29 Mar 01:00 GMT → 02:00 BST.
+- Sydney DST 2026: [timeanddate.com, Sydney clock changes](https://www.timeanddate.com/time/change/australia/sydney) — AEDT (UTC+11) in January, AEST (UTC+10) in July.
+- IST offset: [timeanddate.com, IST](https://www.timeanddate.com/time/zones/ist) — UTC+5:30 year-round.
+- Horizon dip: Nautical Almanac / Bowditch `1.76 × √h` metres → arcminutes, also stated in `docs/03-astronomy.md` §5.

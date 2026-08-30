@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { domainError, err, isErr, isOk, mapResult, ok, unwrapOr } from './result';
+import { domainError, err, isErr, isOk, mapResult, ok, unwrapOr } from './result.ts';
 
 describe('Result', () => {
   it('isOk and isErr distinguish the two sides', () => {

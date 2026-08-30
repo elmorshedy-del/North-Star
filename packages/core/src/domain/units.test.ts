@@ -12,7 +12,7 @@ import {
   radians,
   toDegrees,
   toRadians,
-} from './units';
+} from './units.ts';
 
 describe('unit constructors', () => {
   it('throw on NaN and Infinity', () => {

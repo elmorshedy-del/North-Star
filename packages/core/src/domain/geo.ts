@@ -1,8 +1,8 @@
 import type { DomainError, Result } from './result.contract.ts';
 import type { GeoApi, GeoPosition, Hemisphere } from './geo.contract.ts';
 import type { Degrees } from './units.contract.ts';
-import { domainError, err, ok } from './result';
-import { arcminutes, normaliseSigned180 } from './units';
+import { domainError, err, ok } from './result.ts';
+import { arcminutes, normaliseSigned180 } from './units.ts';
 
 export function geoPosition(
   latitude: Degrees,
@@ -12,6 +12,11 @@ export function geoPosition(
   if (latitude < -90 || latitude > 90) {
     return err(
       domainError('out-of-range', `latitude ${String(latitude)} is outside [-90, 90]`),
+    );
+  }
+  if (!Number.isFinite(elevationMetres)) {
+    return err(
+      domainError('out-of-range', `elevationMetres ${String(elevationMetres)} is not finite`),
     );
   }
   return ok({

@@ -1,6 +1,6 @@
 import type { CivilTime, Instant, TimeApi, TimeZoneId } from './time.contract.ts';
 import type { Milliseconds } from './units.contract.ts';
-import { milliseconds } from './units';
+import { milliseconds } from './units.ts';
 
 function assertFinite(value: number, label: string): void {
   if (!Number.isFinite(value)) {
@@ -13,7 +13,13 @@ export function instant(epochMilliseconds: number): Instant {
   return epochMilliseconds as Instant;
 }
 
+/** Date.parse treats a missing offset as the host zone — the leak this constructor exists to prevent. */
+const EXPLICIT_OFFSET = /(?:Z|[+-]\d{2}:\d{2})$/;
+
 export function instantFromIso(iso: string): Instant {
+  if (!EXPLICIT_OFFSET.test(iso)) {
+    throw new Error(`instantFromIso: timestamp must include Z or ±hh:mm, got ${iso}`);
+  }
   const epochMilliseconds = Date.parse(iso);
   if (!Number.isFinite(epochMilliseconds)) {
     throw new Error(`instantFromIso: invalid ISO 8601 timestamp: ${iso}`);
@@ -34,6 +40,7 @@ export function durationBetween(a: Instant, b: Instant): Milliseconds {
 }
 
 export function timeZone(id: string): TimeZoneId {
+  formatterFor(id);
   return id as TimeZoneId;
 }
 
@@ -57,8 +64,15 @@ interface CivilParts {
   readonly second: number;
 }
 
-function civilParts(epochMs: number, zone: string): CivilParts {
-  // timeZone is always explicit so this never falls back to the host zone.
+const civilFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function formatterFor(zone: string): Intl.DateTimeFormat {
+  const cached = civilFormatters.get(zone);
+  if (cached !== undefined) {
+    return cached;
+  }
+  // Construction is the expensive part of Intl; one formatter per zone is reused
+  // for wall-clock parts and the January/July DST probes.
   const formatter = new Intl.DateTimeFormat('en-GB', {
     timeZone: zone,
     year: 'numeric',
@@ -69,7 +83,12 @@ function civilParts(epochMs: number, zone: string): CivilParts {
     second: '2-digit',
     hourCycle: 'h23',
   });
-  const parts = formatter.formatToParts(new Date(epochMs));
+  civilFormatters.set(zone, formatter);
+  return formatter;
+}
+
+function civilParts(epochMs: number, zone: string): CivilParts {
+  const parts = formatterFor(zone).formatToParts(new Date(epochMs));
   return {
     year: parseIntlInteger(partValue(parts, 'year')),
     month: parseIntlInteger(partValue(parts, 'month')),
