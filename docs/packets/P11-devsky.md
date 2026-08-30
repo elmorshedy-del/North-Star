@@ -29,7 +29,11 @@ apps/web/src/state/sky-source.ts    (or wherever P10 put context composition)
 A `/dev` route with:
 
 - Latitude, longitude, elevation inputs
-- Date and time inputs, plus an IANA time-zone selector
+- Date and time inputs, plus an IANA time-zone selector. **It must be a picker
+  over a fixed list of valid zones, never a free-text field.** `timeZone()` in
+  the domain validates eagerly and throws on an unknown id, on the assumption
+  that an invalid zone is programmer error rather than something a user can
+  type. A free-text box breaks that assumption and turns a typo into a crash.
 - A set of one-tap presets — they save real time and encode the interesting cases:
   Greenwich, the equator, 78°N (Arctic, for always-up and never-rises), 40.4°N
   −3.7°E (Madrid, the two-hour solar-clock gap), and the antimeridian
