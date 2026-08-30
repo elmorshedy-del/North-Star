@@ -5,7 +5,7 @@ export default defineConfig({
     include: ['packages/**/*.test.ts', 'apps/**/*.test.ts', 'apps/**/*.test.tsx'],
     // Remains true only while the core is unimplemented. Packet P1 flips this to
     // false: after that, a workspace with no tests is a defect, not a pass.
-    passWithNoTests: true,
+    passWithNoTests: false,
     coverage: {
       provider: 'v8',
       include: ['packages/core/src/**/*.ts'],
