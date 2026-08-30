@@ -84,10 +84,11 @@ describe('rise and set as modelled outcomes', () => {
     expect(isErr(set) && set.error.code).toBe('body-never-rises');
   });
 
-  it('reports body-never-rises for nautical dawn in the Arctic December', () => {
-    const ctx = at(78, 0, '2026-12-21T00:00:00.000Z');
+  it('reports body-always-up for nautical dawn when the Arctic sun never sets', () => {
+    // June at 78°N: the sun stays well above −12°, so it never *crosses* nautical dawn.
+    const ctx = at(78, 0, '2026-06-21T00:00:00.000Z');
     const dawn = eph.altitudeCrossing('sun', ctx, degrees(-12), 'next-rise');
-    expect(isErr(dawn) && dawn.error.code).toBe('body-never-rises');
+    expect(isErr(dawn) && dawn.error.code).toBe('body-always-up');
   });
 
   it('reports body-always-up for Polaris at 60°N', () => {
