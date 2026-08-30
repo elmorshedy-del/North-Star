@@ -94,8 +94,10 @@ not a defect.
 The first suite could stay green with two real defects:
 
 - Invariant 2 only called `Equator`. A `false` ofdate inside `horizontalOf`
-  would still pass. It now also requires `horizontalOf('polaris')` to match
-  the of-date `Horizon` and to miss the J2000 `Horizon` by > 0.05°.
+  would still pass. It now also requires `horizontalOf('polaris')` to stay
+  within 1′ of the of-date `Horizon` across a day, and to miss the J2000
+  `Horizon` by > 0.05° at the worst hour (a single midnight sample hid the
+  epoch error in azimuth).
 - Invariant 5 called `refractionAt` with the *apparent* noon altitude. The
   port takes a true altitude. Predicted is now
   `geometric + refractionAt(geometric)`.
