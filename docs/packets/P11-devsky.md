@@ -45,7 +45,8 @@ simulated attempt, and the UI must be equally honest: a simulated fix that looks
 real is a lie to the user and a cheat code for the streak.
 
 Persist the override in `sessionStorage`, not `localStorage` — it should not survive
-a browser restart and quietly convince someone their app is broken.
+a browser restart and quietly convince someone their app is broken. Build the key
+with `storageKey()` from `@cnav/brand`, as everywhere else.
 
 ## Acceptance tests
 

@@ -24,12 +24,31 @@ Anything in `packages/core/src`. Any `*.contract.ts` or `*.port.ts`.
 - The app extends `tsconfig.base.json`. Strictness is not negotiable.
 - **No UI component library.** Five screens do not justify the dependency, the
   bundle, or the design drift.
-- `base` in `vite.config.ts` must be **`/North-Star/`** — GitHub Pages project
-  paths are case-sensitive and the repository is `North-Star`, not `north-star`.
+- `base` in `vite.config.ts` must be **`pagesBasePath` imported from `@cnav/brand`**.
+  Do not hardcode it. GitHub Pages project paths are case-sensitive, and the wrong
+  casing ships a blank page with a 404 on every asset and no error message.
   Getting this wrong ships a blank page with 404s on every asset, which is the
   classic Pages failure and costs an hour to diagnose.
-- The app imports core through the workspace package (`@north-star/core/application`),
+- The app imports core through the workspace package (`@cnav/core/application`),
   never by relative path into `packages/`.
+
+## The product name is not yours to type
+
+The name lives in exactly one place: `PRODUCT` in `packages/brand/src/index.ts`.
+
+**Never hardcode it.** Import it:
+
+```ts
+import { PRODUCT, pagesBasePath } from '@cnav/brand';
+```
+
+Use `PRODUCT.name` for the HTML `<title>`, any header, and the PWA manifest;
+`PRODUCT.tagline` for the meta description; `pagesBasePath` for Vite's `base`.
+Generate the `index.html` title through Vite rather than typing it into the file,
+so a rename stays a one-line change.
+
+If you find yourself typing the product's name anywhere, stop — that is the thing
+this structure exists to prevent.
 
 ## Design direction
 

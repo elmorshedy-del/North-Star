@@ -38,6 +38,12 @@ const fixtures = [
     expectRule: 'no-restricted-imports',
   },
   {
+    name: 'the product name may not leak into the core',
+    path: `${CORE}/domain/__guardrail_brand.ts`,
+    code: `import { PRODUCT } from '@cnav/brand';\nexport const leak = PRODUCT.name;\n`,
+    expectRule: 'no-restricted-imports',
+  },
+  {
     name: 'core may not read the ambient clock via new Date()',
     path: `${CORE}/domain/__guardrail_d.ts`,
     code: `export const leak = (): number => new Date().getTime();\n`,

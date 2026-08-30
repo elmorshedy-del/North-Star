@@ -30,7 +30,34 @@ apps/mobile/       Expo native app (reserved)
 **Dependencies point inward, always.** The domain knows nothing about the
 application; the application knows nothing about any library or device.
 
-## The three enforced rules
+## Product identity is separate from structural identity
+
+Names change — after a trademark search, after the domain turns out to be taken, or
+simply because a better one appears. A name that has spread into package scopes,
+import paths and storage keys is no longer a rename; it is a week of grep, a broken
+deploy path, and users whose saved data has quietly disappeared.
+
+So identity is split three ways:
+
+| Kind | Where | Changes? |
+|---|---|---|
+| **Brand** | `PRODUCT` in `packages/brand/src/index.ts` | Expected to |
+| **Structural** | package names — `@cnav/core`, `@cnav/brand` | Never |
+| **Persistent** | `STORAGE_NAMESPACE` in the same file | **Must never** |
+
+Structural names are descriptive (`cnav`, for celestial navigation) rather than
+brand-derived, because a description survives a rebrand and a brand name does not.
+
+`STORAGE_NAMESPACE` is deliberately fixed and deliberately meaningless. If storage
+keys followed the brand, a rename would orphan every user's saved calibration and
+progress — they would open the app to find their work gone, with nothing to explain
+it. Storage keys are a data migration, not a label.
+
+**Renaming the product is one edit:** change `PRODUCT` in
+`packages/brand/src/index.ts`. Nothing else in the codebase hardcodes the name, and
+rule 4 below stops it creeping back in.
+
+## The four enforced rules
 
 These are not documentation. They are in `eslint.config.js` and they fail the build.
 
@@ -41,6 +68,9 @@ These are not documentation. They are in `eslint.config.js` and they fail the bu
 3. **No ambient state** — `no-restricted-syntax` and `no-restricted-globals` ban
    `new Date()` with no arguments, `Date.now()`, `Math.random()`, and `window`,
    `document`, `navigator` and `localStorage` inside the core.
+4. **Brand containment** — `packages/core` may not import `@cnav/brand`. The core is
+   astronomy and teaching; it has no business knowing what the product is called,
+   and a rename must not be able to reach it.
 
 `new Date(epochMs)` **with** an explicit argument is allowed: constructing a moment
 from data is fine, reading the ambient clock is not. That distinction is the whole
