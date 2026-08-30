@@ -66,6 +66,25 @@ against 11:43:33 ± 2 s.
 
 ---
 
+## 6. Probe #2 is 0.7144° against a published ≤ 0.71° — not widening
+
+The step-2 probe asks for `max abs(Polaris apparent altitude − latitude) ≤ 0.71°`.
+A full hourly sweep of 2026 at latitudes 10, 20, 35, 51.48, 65, 80°N gives
+**0.7144°**, at **10°N on 2026-07-23T07:00Z** (signed +0.7144°).
+
+`docs/03-astronomy.md` §3 publishes the 10°N range as −0.53° to **+0.71°**.
+0.7144° to two decimals is 0.71°. I believe the spec rounded and the
+implementation is the same measurement.
+
+The Defence 2 invariant remains **< 1.0°** — I will not tighten it to 0.71 or
+loosen it. I will not change star coordinates or drop refraction to chase the
+fourth decimal.
+
+**Please confirm:** 0.71° in the probe is two-decimal rounding, and 0.7144° is
+not a defect.
+
+---
+
 ## Not raised — covered by standing rulings
 
 - Non-finite input throws (R1). SkyContext is already constructed.
