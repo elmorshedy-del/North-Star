@@ -46,7 +46,9 @@ and star-clock skills.
 
 After each packet:
 
-1. The implementer runs `npm run verify` and pastes the output.
+1. The implementer runs `npm run audit:self` and the packet's probe, and pastes
+   both. The self-audit is this rubric mechanised, so most findings below should
+   already have been caught and fixed before the PR exists.
 2. The architect audits the diff against the rubric below.
 3. Findings come back as a numbered list. **The packet is not done until they are
    resolved.**

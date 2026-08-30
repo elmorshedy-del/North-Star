@@ -157,12 +157,63 @@ Edge cases:
 - Longitude exactly ±180
 - Latitude exactly ±90
 
+## Self-audit — run this BEFORE opening the PR
+
+This packet is the highest-risk in the project, because a wrong answer here is not
+obviously wrong. It is a plausible number, and everything downstream inherits it.
+So the audit's own checks are given to you up front. Run them yourself; the review
+will run exactly these.
+
+### Step 1 — the mechanical checks
+
+```
+npm run audit:self
+```
+
+Contracts unmodified, no escape hatches, contract assertions present, golden values
+cited, verify and coverage green. Fix anything it reports before going further.
+
+### Step 2 — the domain probe, and this is the part that matters
+
+Write a throwaway script that prints the values below, run it, and **paste the
+output into the PR**. Do not skip this because the tests pass: a green suite proves
+your tests agree with your code, not that either matches the sky.
+
+Every number here was measured during specification and is restated in
+`docs/03-astronomy.md`. Your adapter must reproduce them.
+
+| # | Probe | Expected | What a miss means |
+|---|---|---|---|
+| 1 | Polaris offset from the true pole, of-date, 2026 | **0.62° ± 0.02°** | **0.736° means an epoch bug** — you are feeding J2000 coordinates to `Horizon`. This is the single sharpest check in the packet |
+| 2 | max abs(Polaris apparent altitude − latitude), lat 10–80°N, hourly over a year | **≤ 0.71°** | Wrong star, wrong refraction setting, or wrong observer |
+| 3 | `refractionAt(0°)` | **28.98′ ± 0.5′** | If you get ~34′ you have used apparent altitude where the port specifies true |
+| 4 | Noon altitude at **latitude 0, June solstice** | **66.57°** | If you get 113.44° you used `90 − lat + dec` instead of `90 − abs(lat − dec)` |
+| 5 | Equation of time 2026, min and max | **−14.18 min (11 Feb), +16.45 min (3 Nov)** | Derivation wrong, or you used mean instead of apparent transit |
+| 6 | Sidereal advance per solar day | **360.9856° ± 0.001°** | Wrong sidereal call |
+| 7 | Day length at the equator, four dates | **12.11 h ± 0.02** | Exactly 12.00 means you bypassed the −0.833° rise/set convention |
+| 8 | True solar noon, London 2026-11-03 | **11:43:33 UTC ± 2 s** | Transit search wrong |
+| 9 | `riseSet('sun')` at 78°N in June, and in December | **`body-always-up`, `body-never-rises`** | Throwing, or returning a fabricated time, instead of a `Result` |
+| 10 | `localSiderealTime` across a day | **always within [0, 24)** | Missing the wrap |
+
+Any mismatch is a real defect. Do not adjust a tolerance to make it pass — if a
+number disagrees, either the implementation is wrong or you have found an error in
+the specification, and **the second one is worth escalating loudly.**
+
+### Step 3 — record what you had to decide
+
+Anything the packet left unspecified goes in `docs/packets/P2-architect-review.md`
+on your branch: what you chose, why, where to look, what you want confirmed. Check
+`docs/07-standing-rulings.md` first — if a ruling already covers it, follow the
+ruling and do not raise it.
+
 ## Definition of done
 
 ```
-npm run verify
-npm run test:coverage
+npm run audit:self
 ```
 
-Both green, output pasted. State explicitly in your handoff **which external source
-you used for each golden value.** That is the part the audit checks first.
+Green, output pasted, **plus the step-2 probe output**. State which external source
+you used for each golden value; that is what the audit checks first.
+
+A PR that arrives with a passing self-audit and a matching probe should need one
+review round. That is the target.

@@ -17,7 +17,8 @@
     "test:watch": "vitest",
     "verify:guardrails": "node scripts/verify-guardrails.mjs",
     "verify": "npm run typecheck && npm run lint && npm run verify:guardrails && npm run test",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "audit:self": "node scripts/self-audit.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -48,21 +48,35 @@ asked about.
 
 ## Before you say you are done
 
-Run this, and paste the result into your handoff:
+Run this, and paste the result into your pull request:
 
 ```
-npm run verify
+npm run audit:self
 ```
 
-That is typecheck, lint, the architecture guardrail check, and the tests. All four
-must pass. "It works on my branch" is not a status; the command output is.
+**This is the reviewer's rubric, mechanised.** It checks that your branch carries
+the latest `main`, that no architect-owned file was touched, that there are no
+`eslint-disable` or `@ts-ignore` escape hatches, that every module with a contract
+asserts it, and that tests asserting numbers cite a source — then runs `verify` and
+the coverage thresholds.
 
-If your packet added the first tests to a workspace, also run `npm run test:coverage`
-and confirm the thresholds hold.
+The review runs exactly these checks. Running them first turns a day-long round
+trip into ten seconds in your own terminal, which is the whole point of it existing.
+
+It is mechanical only, and it cannot tell you whether an answer is *right*. That is
+what your packet's probe is for. Run that too, and paste its output — a diff that
+looks correct is not evidence that it is.
+
+"It works on my branch" is not a status. The command output is.
 
 ## When to stop and ask
 
-Stop and escalate — do not improvise — if any of these happen:
+**First check `docs/07-standing-rulings.md`.** It records decisions already made in
+earlier reviews — when to throw versus return a `Result`, where to validate, what
+may depend on the environment. If a ruling covers your case, follow it and do not
+raise it again.
+
+Otherwise stop and escalate — do not improvise — if any of these happen:
 
 - A contract or port does not have what you need.
 - A test fails and you believe the test is wrong.
@@ -82,9 +96,9 @@ a PR spanning two packets defeats it.
 1. Branch from `main`, named for the packet: `packet/P1-domain-primitives`.
 2. Commit as you go, with messages that say *why*, not just what.
 3. Open a pull request titled after the packet: `P1 — Domain primitives`.
-4. **Paste the full output of `npm run verify` into the PR description**, plus
-   `npm run test:coverage` once tests exist. The command output is the status;
-   "it works on my branch" is not.
+4. **Paste the full output of `npm run audit:self` into the PR description**, plus
+   your packet's probe output. The command output is the status; "it works on my
+   branch" is not.
 5. In the PR description, also state:
    - Anything the packet asked you to report (several do — sign conventions,
      external sources for golden values, platform behaviour you could not verify).

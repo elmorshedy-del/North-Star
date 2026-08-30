@@ -39,16 +39,19 @@ and only your packet.
 | [`docs/04-skills.md`](./docs/04-skills.md) | The two launch skills, including teaching copy |
 | [`docs/05-testing.md`](./docs/05-testing.md) | How we stop tests from asserting their own output |
 | [`docs/06-build-order.md`](./docs/06-build-order.md) | Packet sequence and the review gate |
+| [`docs/07-standing-rulings.md`](./docs/07-standing-rulings.md) | Decisions already made, binding on every packet |
 
 ## Commands
 
 ```
+npm run audit:self        # the review rubric, run against your own branch
 npm run verify            # typecheck + lint + architecture guardrails + tests
 npm run verify:guardrails # proves the architecture rules still fire
 npm run test:coverage     # coverage against the thresholds
 ```
 
-`npm run verify` is the definition of done. All four stages must pass.
+`npm run audit:self` is the definition of done. It runs `verify` and coverage, and
+adds the structural checks the review would apply anyway.
 
 ## Layout
 

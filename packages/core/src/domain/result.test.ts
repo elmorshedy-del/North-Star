@@ -1,3 +1,5 @@
+// golden-values: none — Result is algebra, not measurement. The numbers here are
+// arbitrary payloads chosen to make the transform visible; there is nothing to cite.
 import { describe, expect, it } from 'vitest';
 import { domainError, err, isErr, isOk, mapResult, ok, unwrapOr } from './result.ts';
 

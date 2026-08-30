@@ -15,7 +15,12 @@ repository to understand what to build, that is a defect in the packet — say s
 3. Never edit a `*.contract.ts` or `*.port.ts` file.
 4. Never edit a test to make it pass.
 5. Never add an `eslint-disable`.
-6. Finish with `npm run verify` and paste the output.
+6. Finish with `npm run audit:self` and paste the output. It is the reviewer's
+   rubric run against your own branch — contracts untouched, no escape hatches,
+   contract assertions present, golden values cited, verify and coverage green.
+7. Also run your packet's probe and paste that output. The self-audit proves the
+   mechanics; the probe is the only thing that proves the answers.
+8. Follow `docs/07-standing-rulings.md` rather than re-asking a settled question.
 
 ## Start from the latest `main`
 
@@ -23,8 +28,8 @@ repository to understand what to build, that is a defect in the packet — say s
 
 A branch cut from a stale `main` can pass every check on its own and still be wrong
 about what lands, because the checks it ran are not the checks the merged result
-runs. Before asking for review, merge `main` in and re-run `npm run verify` on the
-result.
+runs. Before asking for review, merge `main` in and re-run `npm run audit:self` on
+the result — it fails outright if your branch is behind.
 
 ## Escalate rather than guess
 
