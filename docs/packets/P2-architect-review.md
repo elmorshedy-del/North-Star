@@ -1,0 +1,74 @@
+# P2 — Architect review brief
+
+**Packet:** `docs/packets/P2-ephemeris-adapter.md`
+**Please treat this as the list of behaviour I had to choose.** Rulings in
+`docs/07-standing-rulings.md` were followed and are not re-asked.
+
+---
+
+## 1. Invariant 15 is not in this packet
+
+`docs/05-testing.md` Defence 2 lists fifteen invariants. #15 is `sightedAltitude`
+(level phone → 0°, zenith → 90°). That function is P4 (`measurement.ts`) and
+does not exist yet. Implementing it here would be working ahead.
+
+**In this packet:** invariants 1–14. #13 and #14 are restated because the packet
+asked for all fifteen that this layer can actually run.
+
+**Please confirm:** P4 owns #15.
+
+---
+
+## 2. `riseSet` / `altitudeCrossing` search window is 2 days
+
+The port says "next" rise or set. `SearchRiseSet` with `limitDays = 365` would
+return the August sunrise from a June Arctic context, which fails the required
+`body-always-up` outcome.
+
+**Now:** search 2 days (enough to straddle midnight, not enough to jump a polar
+season). If the search returns null, classify by current altitude against the
+threshold (−0.833° for rise/set, the requested altitude for a crossing):
+above → `body-always-up`, below → `body-never-rises`.
+
+**Look at:** `astronomy-engine-ephemeris.ts` — `SEARCH_DAYS`, `missingEvent`
+
+---
+
+## 3. `equationOfTime` uses the UTC date of the context, observer at (0°, 0°)
+
+The packet defines EoT as `12:00 UT − transit at longitude 0 that day`. "That
+day" is the UTC civil date of `context.instant`. Latitude does not move the
+meridian; I use 0°.
+
+**Look at:** `equationOfTime`
+
+---
+
+## 4. `horizontalOf` always reports `refracted: true`
+
+The packet's of-date example uses `Horizon(..., 'normal')`, which applies
+refraction. There is no port flag to request an airless reduction.
+
+---
+
+## 5. Golden sources (what the audit checks first)
+
+| Quantity | Source | Value |
+|---|---|---|
+| Greenwich sunrise / sunset / solar noon, 2026-11-03 | [NOAA Solar Calculator](https://gml.noaa.gov/grad/solcalc/table.php?name=Greenwich&lat=51.4779&lon=-0.0015&year=2026&tz=0) 51.4779 N 0.0015 W | 06:57, 16:29, **11:43:31** UTC |
+| London nautical twilight, 2026-11-03 | [timeanddate.com, London November 2026](https://www.timeanddate.com/sun/uk/london?month=11&year=2026) | 05:42 / 17:44 GMT |
+| Star J2000 catalogue | `docs/03-astronomy.md` §2 | RA/Dec table |
+| Invariant tolerances | `docs/05-testing.md` Defence 2, `docs/03-astronomy.md` | as written |
+
+NOAA's Greenwich solar noon is **11:43:31**. The packet probe says 11:43:33 ± 2 s.
+Those agree. I gold against NOAA (11:43:31 ± 2 s) and will report the probe
+against 11:43:33 ± 2 s.
+
+---
+
+## Not raised — covered by standing rulings
+
+- Non-finite input throws (R1). SkyContext is already constructed.
+- Polar undefined rise/set is a `Result`, never a throw (R2).
+- Timestamps in tests always carry `Z` (R4, R5).
+- `.ts` suffixes on every relative import (R8).
